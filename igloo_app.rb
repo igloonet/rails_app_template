@@ -9,6 +9,10 @@
 ## EVERGREEN GEMS SETUP
 gem "rein"
 gem "mysql2"
+# rails 3.1 requirement, may be removed in future
+gem 'execjs'
+# rails 3.1 requirement, may be removed in future
+gem 'therubyracer'
 
 
 ## METRICS?
