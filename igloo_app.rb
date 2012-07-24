@@ -4,10 +4,15 @@
 #       add testing frameworks? probably rpsec, cucumber, capybara-webkit, factory_girl
 #       ask about gravtastic?
 #       ask about paper_trail?
-#       split into separate files
+#       improve database.yml generating (erb in separate file)
+#       improve cs.rb - use 1.9 hash syntax
+#       wait for openssl fix so we get rid of VERIFY_NONE mode, which brings potential security risk
 
 require 'open-uri'
-SOURCE = 'https://raw.github.com/igloonet/rails_app_template/master/'
+SOURCE = 'https://raw.github.com/igloonet/rails_app_template/master/templates/'
+def download(filename)
+  open(SOURCE + filename, :ssl_verify_mode => OpenSSL::SSL::VERIFY_NONE).read
+end
 
 ## EVERGREEN GEMS SETUP
 # gem "rein" - causes weird errors on startup (class mismatch)
@@ -24,8 +29,8 @@ if yes?("Do you want to use metrics with metrical?")
 end
 
 if yes?("Prepare for cc.rb integration?")
-  create_file 'script/build', open(SOURCE + 'temaplates/build') 
-  create_file 'config/database.yml.ci.erb', open(SOURCE + 'templates/database.yml.ci.erb')
+  create_file 'script/build', download('build')
+  create_file 'config/database.yml.ci.erb', download('database.yml.ci.erb')
 end
 
 # ActiveRecord plugins
@@ -35,20 +40,7 @@ if yes?("Use kaminari as paginator?")
 end
 if yes?("Use squeel for better AR conditions syntax?")
   gem "squeel"
-  initializer 'squeel.rb', <<-CODE
-Squeel.configure do |config|
-  # To load hash extensions (to allow for AND (&), OR (|), and NOT (-) against
-  # hashes of conditions)
-  # config.load_core_extensions :hash
-
-  # To load symbol extensions (for a subset of the old MetaWhere functionality,
-  # via ARel predicate methods on Symbols: :name.matches, etc)
-  # config.load_core_extensions :symbol
-
-  # To load both hash and symbol extensions
-  config.load_core_extensions :hash, :symbol
-end
-CODE
+  initializer 'squeel.rb', download('squeel.rb')
 end
 if yes?("Use ransack for easy filtering and searching?")
   gem "ransack"
@@ -57,18 +49,7 @@ end
 ## PRY INTEGRATION
 if yes?("Use Pry instead of IRB?")
   gem "pry"
-  initializer 'pry.rb', <<-CODE
-Rails.application.class.configure do
-    # Use Pry instead of IRB
-    silence_warnings do
-      begin
-        require 'pry'
-        IRB = Pry
-      rescue LoadError
-      end
-    end
-  end
-CODE
+  initializer 'pry.rb', download('pry.rb')
 end
 
 ## DEVISE SETUP
@@ -146,20 +127,8 @@ end
 
 ## Pluralization keys - one, few, others
 if yes?("Install czech pluralization? (one, few, others)")
-  file "config/locales/pluralization/cs.rb", <<-EOF
-key = lambda{|n| n==1 ? :one : (n>=2 && n<=4) ? :few : :other}
-{:cs => 
-  {:i18n => 
-    {:keys => [:one, :few, :other], :plural => {:rule => key}}
-  }
-}
-  EOF
-
-  initializer 'i18n.rb', '%w{yml rb}.each do |type|
-  Rails.application.config.i18n.load_path += Dir.glob("#{Rails.root}/config/locales/**/*.#{type}")
-end
-I18n::Backend::Simple.send(:include, I18n::Backend::Pluralization)
-'
+  file "config/locales/pluralization/cs.rb", download('cs.rb')
+  initializer 'i18n.rb', download('i18n.rb')
 end
 
 ## CANCAN INSTALLATION
