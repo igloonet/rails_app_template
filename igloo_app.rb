@@ -56,10 +56,10 @@ data = Dir.glob('tmp/metric_fu/_data/*').sort
 #    'bundle exec metrical 2>&1',
 #    'RAILS_ENV=test bundle exec rake db:migrate 2>&1',
 #    'Xvfb :99 &',
-#    "RAILS_ENV=test bundle exec rspec spec/models/ spec/decorators/ --format html --out #{ENV['CC_BUILD_ARTIFACTS']}/spec_output.html 2>&1",
-#    "DISPLAY=:99 bundle exec cucumber --format html --out #{ENV['CC_BUILD_ARTIFACTS']}/cucumber.html features/ 2>&1",
+#    "RAILS_ENV=test bundle exec rspec spec/models/ spec/decorators/ --format html --out \#{ENV['CC_BUILD_ARTIFACTS']}/spec_output.html 2>&1",
+#    "DISPLAY=:99 bundle exec cucumber --format html --out \#{ENV['CC_BUILD_ARTIFACTS']}/cucumber.html features/ 2>&1",
 ].each do |command|
-  output = `#{command}`
+  output = `\#{command}`
   result = $?.exitstatus
   set_result(command, output, result)
 end
@@ -67,13 +67,13 @@ end
 n = 0
 @result.each_pair do |command, result|
   n += 1
-  puts "STAGE #{n}: #{format_code(result[:code])} (#{command})"
+  puts "STAGE \#{n}: \#{format_code(result[:code])} (\#{command})"
 end
 
 3.times {puts ""}
 
 @result.each_pair do |command, result|
-  puts "#{command} output: #{result[:output]}" if result[:code].to_i > 0
+  puts "\#{command} output: \#{result[:output]}" if result[:code].to_i > 0
 end
 
 exit(@result.max {|a| a.last[:code]}.last[:code])
