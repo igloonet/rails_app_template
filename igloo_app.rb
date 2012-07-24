@@ -5,9 +5,10 @@
 #       add/ask whenever for cron management?
 #       ask about gravtastic?
 #       ask about paper_trail?
+#       add cc.rb integration
 
 ## EVERGREEN GEMS SETUP
-gem "rein"
+# gem "rein" - causes weird errors on startup (class mismatch)
 gem "mysql2"
 # rails 3.1 requirement, may be removed in future
 gem 'execjs'
