@@ -1,9 +1,13 @@
 # IglooNET Rails app generator
 #
-# TODO: add testing frameworks? probably rpsec, cucumber, capybara-webkit, factory_girl
+# TODO: run gem generators after bundle install! and setting rvm
+#       add testing frameworks? probably rpsec, cucumber, capybara-webkit, factory_girl
 #       ask about gravtastic?
 #       ask about paper_trail?
 #       split into separate files
+
+require 'open-uri'
+SOURCE = 'https://raw.github.com/igloonet/rails_app_template/master/'
 
 ## EVERGREEN GEMS SETUP
 # gem "rein" - causes weird errors on startup (class mismatch)
@@ -20,80 +24,8 @@ if yes?("Do you want to use metrics with metrical?")
 end
 
 if yes?("Prepare for cc.rb integration?")
-  create_file 'script/build', <<-CODE#!/usr/bin/env ruby
-
-require 'rubygems'
-require 'erb'
-require 'fileutils'
-
-template = ERB.new(File.open('config/database.yml.ci.erb') { |file| file.read })
-db_host = ARGV[0]
-db_user = ARGV[1]
-db_pass = ARGV[2]
-db_name = ARGV[3]
-result = template.result(binding)
-File.open("config/database.yml", "w") { |file| file.puts result }  unless File.exists?("config/database.yml")
-
-@result = {}
-def set_result(command, output, result)
-  @result[command] = {:output => output, :code => result}
-end
-
-def format_code(code)
-  formated = case code.to_i
-    when 0 then 'OK'
-    else 'ERROR'
-  end
-  formated.ljust(5)
-end
-
-# necháme posledních 19 měření metrik
-data = Dir.glob('tmp/metric_fu/_data/*').sort
-(data - data[-19..-1]).each { |f| FileUtils.rm(f) }
-
-# spustíme metriky, migrace a postupně všechny testy, pozapínejte, co se hodí
-[
-#    'bundle exec metrical 2>&1',
-#    'RAILS_ENV=test bundle exec rake db:migrate 2>&1',
-#    'Xvfb :99 &',
-#    "RAILS_ENV=test bundle exec rspec spec/models/ spec/decorators/ --format html --out \#{ENV['CC_BUILD_ARTIFACTS']}/spec_output.html 2>&1",
-#    "DISPLAY=:99 bundle exec cucumber --format html --out \#{ENV['CC_BUILD_ARTIFACTS']}/cucumber.html features/ 2>&1",
-].each do |command|
-  output = `\#{command}`
-  result = $?.exitstatus
-  set_result(command, output, result)
-end
-
-n = 0
-@result.each_pair do |command, result|
-  n += 1
-  puts "STAGE \#{n}: \#{format_code(result[:code])} (\#{command})"
-end
-
-3.times {puts ""}
-
-@result.each_pair do |command, result|
-  puts "\#{command} output: \#{result[:output]}" if result[:code].to_i > 0
-end
-
-exit(@result.max {|a| a.last[:code]}.last[:code])
-CODE
-
-  create_file 'config/database.yml.ci.erb', <<-CODE
-shared: &shared
-  adapter: mysql2
-  username: <%= db_user %>
-  password: <%= db_pass %>
-  host: <%= db_host %>
-  database: <%= db_name %>
-
-test:
-  <<: *shared
-development:
-  <<: *shared
-production:
-  <<: *shared
-CODE
+  create_file 'script/build', open(SOURCE + 'temaplates/build') 
+  create_file 'config/database.yml.ci.erb', open(SOURCE + 'templates/database.yml.ci.erb')
 end
 
 # ActiveRecord plugins
